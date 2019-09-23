@@ -32,9 +32,9 @@ RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
   cd caom2tools && git pull origin master && \
   pip install ./caom2utils && pip install ./caom2pipe
   
-RUN git clone https://github.com/opencadc-metadata-curation/blank2caom2.git && \
-  cp ./blank2caom2/scripts/configyml / && \
-  cp ./blank2caom2/scripts/docker-entrypointsh / && \
+RUN git clone https://github.com/opencadc-metadata-curation/vlite2caom2.git && \
+  cp ./vlite2caom2/scripts/config.yml / && \
+  cp ./vlite2caom2/scripts/docker-entrypoint.sh / && \
   pip install ./blank2caom2
 
 RUN apk --no-cache del git

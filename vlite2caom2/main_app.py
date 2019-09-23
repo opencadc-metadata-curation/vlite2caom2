@@ -67,73 +67,121 @@
 # ***********************************************************************
 #
 
-from mock import patch
-
-from blank2caom2 import blank_main_app, APPLICATION, COLLECTION, BlankName
-from blank2caom2 import ARCHIVE
-from caom2.diff import get_differences
-from caom2pipe import manage_composable as mc
-
+import importlib
+import logging
 import os
 import sys
+import traceback
 
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
-
-LOOKUP = {'key': ['fileid1', 'fileid2']}
-
-
-def pytest_generate_tests(metafunc):
-    obs_id_list = []
-    for ii in LOOKUP:
-        obs_id_list.append(ii)
-    metafunc.parametrize('test_name', obs_id_list)
+from caom2 import Observation
+from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
+from caom2pipe import manage_composable as mc
+from caom2pipe import execute_composable as ec
 
 
-def test_main_app(test_name):
-    basename = os.path.basename(test_name)
-    neos_name = BlankName(file_name=basename)
-    output_file = '{}/actual.{}.xml'.format(TEST_DATA_DIR, basename)
-    obs_path = '{}/{}'.format(TEST_DATA_DIR, 'expected.{}.xml'.format(
-        neos_name.obs_id))
-    expected = mc.read_obs_from_file(obs_path)
-
-    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
-        def get_file_info(archive, file_id):
-            return {'type': 'application/fits'}
-
-        data_client_mock.return_value.get_file_info.side_effect = get_file_info
-        sys.argv = \
-            ('{} --no_validate --local {} --observation {} {} -o {} '
-             '--plugin {} --module {} --lineage {}'.
-             format(APPLICATION, _get_local(test_name), COLLECTION,
-                    test_name, output_file, PLUGIN, PLUGIN,
-                    _get_lineage(test_name))).split()
-        print(sys.argv)
-        blank_main_app()
-
-    actual = mc.read_obs_from_file(output_file)
-    result = get_differences(expected, actual, 'Observation')
-    if result:
-        msg = 'Differences found in observation {} test name {}\n{}'. \
-            format(expected.observation_id, test_name, '\n'.join(
-            [r for r in result]))
-        raise AssertionError(msg)
-    # assert False  # cause I want to see logging messages
+__all__ = ['vlite_main_app', 'update', 'VliteName', 'COLLECTION',
+           'APPLICATION']
 
 
-def _get_lineage(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        product_id = BlankName.extract_product_id(ii)
-        fits = mc.get_lineage(ARCHIVE, product_id, '{}.fits'.format(ii))
-        result = '{} {}'.format(result, fits)
+APPLICATION = 'vlite2caom2'
+COLLECTION = 'VLITE'
+
+
+class VliteName(ec.StorageName):
+    """Naming rules:
+    - support mixed-case file name storage, and mixed-case obs id values
+    - support uncompressed files in storage
+    """
+
+    VLITE_NAME_PATTERN = '*'
+
+    def __init__(self, obs_id=None, fname_on_disk=None, file_name=None):
+        self.fname_in_ad = file_name
+        super(VliteName, self).__init__(
+            obs_id, COLLECTION, VliteName.VLITE_NAME_PATTERN, fname_on_disk)
+
+    def is_valid(self):
+        return True
+
+
+def accumulate_bp(bp, uri):
+    """Configure the telescope-specific ObsBlueprint at the CAOM model 
+    Observation level."""
+    logging.debug('Begin accumulate_bp.')
+    bp.configure_position_axes((1,2))
+    bp.configure_time_axis(3)
+    bp.configure_energy_axis(4)
+    bp.configure_polarization_axis(5)
+    bp.configure_observable_axis(6)
+    logging.debug('Done accumulate_bp.')
+
+
+def update(observation, **kwargs):
+    """Called to fill multiple CAOM model elements and/or attributes, must
+    have this signature for import_module loading and execution.
+
+    :param observation A CAOM Observation model instance.
+    :param **kwargs Everything else."""
+    logging.debug('Begin update.')
+    mc.check_param(observation, Observation)
+
+    headers = None
+    if 'headers' in kwargs:
+        headers = kwargs['headers']
+    fqn = None
+    if 'fqn' in kwargs:
+        fqn = kwargs['fqn']
+
+    logging.debug('Done update.')
+    return observation
+
+
+def _build_blueprints(uris):
+    """This application relies on the caom2utils fits2caom2 ObsBlueprint
+    definition for mapping FITS file values to CAOM model element
+    attributes. This method builds the DRAO-ST blueprint for a single
+    artifact.
+
+    The blueprint handles the mapping of values with cardinality of 1:1
+    between the blueprint entries and the model attributes.
+
+    :param uris The artifact URIs for the files to be processed."""
+    module = importlib.import_module(__name__)
+    blueprints = {}
+    for uri in uris:
+        blueprint = ObsBlueprint(module=module)
+        if not ec.StorageName.is_preview(uri):
+            accumulate_bp(blueprint, uri)
+        blueprints[uri] = blueprint
+    return blueprints
+
+
+def _get_uris(args):
+    result = []
+    if args.local:
+        for ii in args.local:
+            file_id = ec.StorageName.remove_extensions(os.path.basename(ii))
+            file_name = '{}.fits'.format(file_id)
+            result.append(VliteName(file_name=file_name).file_uri)
+    elif args.lineage:
+        for ii in args.lineage:
+            result.append(ii.split('/', 1)[1])
+    else:
+        raise mc.CadcException(
+            'Could not define uri from these args {}'.format(args))
     return result
 
 
-def _get_local(obs_id):
-    result = ''
-    for ii in LOOKUP[obs_id]:
-        result = '{} {}/{}.fits.header'.format(result, TEST_DATA_DIR, ii)
-    return result
+def vlite_main_app():
+    args = get_gen_proc_arg_parser().parse_args()
+    try:
+        uris = _get_uris(args)
+        blueprints = _build_blueprints(uris)
+        gen_proc(args, blueprints)
+    except Exception as e:
+        logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+    logging.debug('Done {} processing.'.format(APPLICATION))

@@ -66,8 +66,8 @@
 #
 # ***********************************************************************
 #
-from blank2caom2 import BlankName
+from vlite2caom2 import VliteName
 
 
 def test_is_valid():
-    assert BlankName('anything').is_valid()
+    assert VliteName('anything').is_valid()
