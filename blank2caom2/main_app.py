@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2019.                            (c) 2019.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -79,11 +79,13 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import execute_composable as ec
 
 
-__all__ = ['main_app', 'update', 'BlankName', 'COLLECTION', 'APPLICATION']
+__all__ = ['blank_main_app', 'update', 'BlankName', 'COLLECTION',
+           'APPLICATION', 'ARCHIVE']
 
 
 APPLICATION = 'blank2caom2'
 COLLECTION = 'blank'
+ARCHIVE = 'blank'
 
 
 class BlankName(ec.StorageName):
@@ -135,7 +137,7 @@ def update(observation, **kwargs):
     return observation
 
 
-def _build_blueprints(uri):
+def _build_blueprints(uris):
     """This application relies on the caom2utils fits2caom2 ObsBlueprint
     definition for mapping FITS file values to CAOM model element
     attributes. This method builds the DRAO-ST blueprint for a single
@@ -144,34 +146,38 @@ def _build_blueprints(uri):
     The blueprint handles the mapping of values with cardinality of 1:1
     between the blueprint entries and the model attributes.
 
-    :param uri The artifact URI for the file to be processed."""
+    :param uris The artifact URIs for the files to be processed."""
     module = importlib.import_module(__name__)
-    blueprint = ObsBlueprint(module=module)
-    accumulate_bp(blueprint, uri)
-    blueprints = {uri: blueprint}
+    blueprints = {}
+    for uri in uris:
+        blueprint = ObsBlueprint(module=module)
+        if not ec.StorageName.is_preview(uri):
+            accumulate_bp(blueprint, uri)
+        blueprints[uri] = blueprint
     return blueprints
 
 
-def _get_uri(args):
-    result = None
-    if args.observation:
-        result = BlankName(obs_id=args.observation[1]).file_uri
-    elif args.local:
-        obs_id = BlankName.remove_extensions(os.path.basename(args.local[0]))
-        result = BlankName(obs_id=obs_id).file_uri
+def _get_uris(args):
+    result = []
+    if args.local:
+        for ii in args.local:
+            file_id = ec.StorageName.remove_extensions(os.path.basename(ii))
+            file_name = '{}.fits'.format(file_id)
+            result.append(BlankName(file_name=file_name).file_uri)
     elif args.lineage:
-        result = args.lineage[0].split('/', 1)[1]
+        for ii in args.lineage:
+            result.append(ii.split('/', 1)[1])
     else:
         raise mc.CadcException(
             'Could not define uri from these args {}'.format(args))
     return result
 
 
-def main_app():
+def blank_main_app():
     args = get_gen_proc_arg_parser().parse_args()
     try:
-        uri = _get_uri(args)
-        blueprints = _build_blueprints(uri)
+        uris = _get_uris(args)
+        blueprints = _build_blueprints(uris)
         gen_proc(args, blueprints)
     except Exception as e:
         logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
