@@ -81,7 +81,11 @@ TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 
 # LOOKUP = {'': []}
-LOOKUP = {}
+# LOOKUP = {'T23t17.J161840+500.IMSC_h0': ['T23t17.J161840+500.IMSC_h0'],
+#           '10GHz.3C147_h0': ['10GHz.3C147_h0']}
+# The uv file has 7 axes, which the CAOM2 model rejects.
+
+LOOKUP = {'T23t17.J161840+500.IMSC_h0': ['T23t17.J161840+500.IMSC_h0']}
 
 
 def pytest_generate_tests(metafunc):

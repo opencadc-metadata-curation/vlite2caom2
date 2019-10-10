@@ -97,22 +97,52 @@ class VliteName(ec.StorageName):
 
     def __init__(self, obs_id=None, fname_on_disk=None, file_name=None):
         self.fname_in_ad = file_name
+        if obs_id is None:
+            obs_id = ec.StorageName.remove_extensions(file_name)
         super(VliteName, self).__init__(
             obs_id, COLLECTION, VliteName.VLITE_NAME_PATTERN, fname_on_disk)
 
     def is_valid(self):
         return True
 
+    @staticmethod
+    def extract_product_id(entry):
+        return 'product_id'
+
+    @staticmethod
+    def is_image(entry):
+        result = True
+        if entry.startswith('10'):
+            result = False
+        return result
+
 
 def accumulate_bp(bp, uri):
     """Configure the telescope-specific ObsBlueprint at the CAOM model 
     Observation level."""
     logging.debug('Begin accumulate_bp.')
-    bp.configure_position_axes((1,2))
-    bp.configure_time_axis(3)
-    bp.configure_energy_axis(4)
-    bp.configure_polarization_axis(5)
-    bp.configure_observable_axis(6)
+    if VliteName.is_image(uri):
+        bp.configure_position_axes((1, 2))
+        bp.configure_energy_axis(3)
+        bp.configure_polarization_axis(4)
+        data_product_type = 'image'
+        calibration_level = 2
+    else:
+        bp.configure_position_axes((6, 7))
+        bp.configure_energy_axis(4)
+        # bp.configure_time_axis(4)
+        bp.configure_polarization_axis(3)
+        bp.configure_observable_axis(2)
+        data_product_type = 'visibility'
+        calibration_level = 3
+
+    bp.set('Plane.dataProductType', data_product_type)
+    bp.set('Plane.calibrationLevel', calibration_level)
+    bp.clear('Plane.metaRelease')
+    bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
+    bp.clear('Plane.dataRelease')
+    bp.add_fits_attribute('Plane.dataRelease', 'DATE-OBS')
+
     logging.debug('Done accumulate_bp.')
 
 

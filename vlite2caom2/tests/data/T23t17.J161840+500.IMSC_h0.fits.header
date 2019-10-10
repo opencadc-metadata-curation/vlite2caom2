@@ -1,0 +1,60 @@
+SIMPLE  =                    T / file does conform to FITS standard
+BITPIX  =                  -32 / number of bits per data pixel
+NAXIS   =                    4 / number of data axes
+NAXIS1  =                 3600 / length of data axis 1
+NAXIS2  =                 3600 / length of data axis 2
+NAXIS3  =                    1 / length of data axis 3
+NAXIS4  =                    1 / length of data axis 4
+EXTEND  =                    T / FITS dataset may contain extensions
+COMMENT   FITS (Flexible Image Transport System) format is defined in 'Astronomy
+COMMENT   and Astrophysics', volume 376, page 359; bibcode: 2001A&A...376..359H
+CTYPE1  = 'RA---SIN '          / Axis type
+CDELT1  =        -8.333334E-04 / Axis coordinate increment
+CRPIX1  =         1.801000E+03 / Axis coordinate reference pixel
+CROTA1  =         0.000000E+00 / Axis coordinate rotation
+CRVAL1  =   2.446671714806E+02 / Axis coordinate value at CRPIX
+CTYPE2  = 'DEC--SIN '          / Axis type
+CDELT2  =         8.333334E-04 / Axis coordinate increment
+CRPIX2  =         1.801000E+03 / Axis coordinate reference pixel
+CROTA2  =         0.000000E+00 / Axis coordinate rotation
+CRVAL2  =   5.000000000000E+01 / Axis coordinate value at CRPIX
+CTYPE3  = 'FREQ     '          / Axis type
+CDELT3  =         1.170000E+07 / Axis coordinate increment
+CRPIX3  =         1.000000E+00 / Axis coordinate reference pixel
+CROTA3  =         0.000000E+00 / Axis coordinate rotation
+CRVAL3  =   3.387500000000E+08 / Axis coordinate value at CRPIX
+CTYPE4  = 'STOKES   '          / Axis type
+CDELT4  =         1.000000E+00 / Axis coordinate increment
+CRPIX4  =         1.000000E+00 / Axis coordinate reference pixel
+CROTA4  =         0.000000E+00 / Axis coordinate rotation
+CRVAL4  =   1.000000000000E+00 / Axis coordinate value at CRPIX
+OBSRA   =   0.000000000000E+00 / Observed Right Ascension
+OBSDEC  =   0.000000000000E+00 / Observed declination
+OBJECT  = 'T23t17  '           / Name of object
+TELESCOP= 'EVLA    '           / Telescope used
+INSTRUME= 'VLITE   '           /
+OBSERVER= 'VCSS    '           /
+DATE-OBS= '2017-10-16'         / Date (yyyy-mm-dd) of observation
+DATE-MAP= '2018-02-13'         / Date (yyyy-mm-dd) created
+ORIGIN  = 'Obit    '           /
+EPOCH   =         2.000000E+03 / Celestial coordiate epoch
+EQUINOX =   2.000000000000E+03 /
+DATAMAX =       7.22182453E-01 / Maximum in data array
+DATAMIN =      -1.33298906E-02 / Minimum in data array
+BUNIT   = 'JY/BEAM '           / Image pixel units
+RESTFREQ=   3.387500160000E+08 / Line rest frequency (Hz)
+CLEANBMJ=         4.833333E-03 / Convolving Gaussian major axis FWHM (deg)
+CLEANBMN=         3.483333E-03 / Convolving Gaussian minor axis FWHM (deg)
+CLEANBPA=        -1.204000E+01 / Convolving Gaussian position angle (deg)
+DO3D    =                    2 /
+XPXOFF  =         0.000000E+00 / x pixel offset
+YPXOFF  =         0.000000E+00 / y pixel offset
+SQUARE  = '        '           /
+CONFIG  = 'B       '           /
+BMAJ    =         4.833333E-03 /
+BMIN    =         3.483333E-03 /
+BPA     =        -1.204000E+01 /
+ACTNOISE=         2.072681E-03 /
+HISTORY AIPS   CLEAN BMAJ=  4.8333e-03 BMIN=  3.4833e-03 BPA= -12.04
+HISTORY AIPS   IMAGE ITYPE=2 XPOFF=      0.00000000 YPOFF=      0.00000000
+END
