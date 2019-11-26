@@ -22,7 +22,7 @@ RUN git clone https://github.com/opencadc-metadata-curation/caom2pipe.git && \
 RUN git clone https://github.com/opencadc-metadata-curation/vlite2caom2.git && \
   cp ./vlite2caom2/scripts/config.yml / && \
   cp ./vlite2caom2/scripts/docker-entrypoint.sh / && \
-  pip install ./blank2caom2
+  pip install ./vlite2caom2
 
 RUN apk --no-cache del git
 
