@@ -87,7 +87,7 @@ APPLICATION = 'vlite2caom2'
 COLLECTION = 'VLITE'
 
 
-class VliteName(ec.StorageName):
+class VliteName(mc.StorageName):
     """Naming rules:
     - support mixed-case file name storage, and mixed-case obs id values
     - support uncompressed files in storage
@@ -98,7 +98,7 @@ class VliteName(ec.StorageName):
     def __init__(self, obs_id=None, fname_on_disk=None, file_name=None):
         self.fname_in_ad = file_name
         if obs_id is None:
-            obs_id = ec.StorageName.remove_extensions(file_name)
+            obs_id = mc.StorageName.remove_extensions(file_name)
         super(VliteName, self).__init__(
             obs_id, COLLECTION, VliteName.VLITE_NAME_PATTERN, fname_on_disk)
 
@@ -180,7 +180,7 @@ def _build_blueprints(uris):
     blueprints = {}
     for uri in uris:
         blueprint = ObsBlueprint(module=module)
-        if not ec.StorageName.is_preview(uri):
+        if not mc.StorageName.is_preview(uri):
             accumulate_bp(blueprint, uri)
         blueprints[uri] = blueprint
     return blueprints
@@ -190,7 +190,7 @@ def _get_uris(args):
     result = []
     if args.local:
         for ii in args.local:
-            file_id = ec.StorageName.remove_extensions(os.path.basename(ii))
+            file_id = mc.StorageName.remove_extensions(os.path.basename(ii))
             file_name = '{}.fits'.format(file_id)
             result.append(VliteName(file_name=file_name).file_uri)
     elif args.lineage:
