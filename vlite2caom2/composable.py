@@ -71,13 +71,14 @@ import logging
 import sys
 import traceback
 
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
+from caom2pipe import name_builder_composable as nbc
+from caom2pipe import run_composable as rc
 from vlite2caom2 import APPLICATION, VliteName
 
 
-meta_visitors = []
-data_visitors = []
+META_VISITORS = []
+DATA_VISITORS = []
 
 
 def _run():
@@ -87,10 +88,10 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config = mc.Config()
-    config.get_executors()
-    return ec.run_by_file(config, VliteName, APPLICATION,
-                          meta_visitors, data_visitors, chooser=None)
+    return rc.run_by_todo(name_builder=nbc.FileNameBuilder(VliteName),
+                          command_name=APPLICATION,
+                          meta_visitors=META_VISITORS,
+                          data_visitors=DATA_VISITORS)
 
 
 def run():
@@ -111,8 +112,10 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
-    return ec.run_from_state(config, VliteName, APPLICATION, meta_visitors,
-                             data_visitors, bookmark=None, work=None)
+    return rc.run_by_state(name_builder=nbc.FileNameBuilder(VliteName),
+                           command_name=APPLICATION,
+                           meta_visitors=META_VISITORS,
+                           data_visitors=DATA_VISITORS)
 
 
 def run_state():

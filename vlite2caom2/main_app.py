@@ -202,16 +202,21 @@ def _get_uris(args):
     return result
 
 
-def vlite_main_app():
+def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
-    try:
-        uris = _get_uris(args)
-        blueprints = _build_blueprints(uris)
-        gen_proc(args, blueprints)
-    except Exception as e:
-        logging.error('Failed {} execution for {}.'.format(APPLICATION, args))
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+    uris = _get_uris(args)
+    blueprints = _build_blueprints(uris)
+    return gen_proc(args, blueprints)
 
-    logging.debug('Done {} processing.'.format(APPLICATION))
+
+def vlite_main_app():
+    try:
+        result = to_caom2()
+        logging.debug('Done {} processing.'.format(APPLICATION))
+        sys.exit(result)
+    except Exception as e:
+        logging.error('Failed {} execution.'.format(APPLICATION))
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.error(tb)
+        sys.exit(-1)
