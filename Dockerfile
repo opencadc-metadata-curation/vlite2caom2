@@ -1,4 +1,4 @@
-FROM opencadc/astropy
+FROM opencadc-metadata-curation/astropy
 
 RUN apk --no-cache add \
     bash \
